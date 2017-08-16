@@ -81,6 +81,18 @@ public:
 	void dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations);
 	
 	/**
+	 * transformObservation transform observation from particle co-ordinates to map co-ordinates for association purpose
+	 */
+
+	std::vector<LandmarkObs> transformObservation(Particle particle, std::vector<LandmarkObs>& observations);
+
+	/**
+	 * predictObservation predict observation of landmarks associated with particle state in map co-ordinates for association purpose
+	 */
+
+	std::vector<LandmarkObs> predictObservation(Particle particle, double sensor_range, Map map_landmarks);
+
+	/**
 	 * updateWeights Updates the weights for each particle based on the likelihood of the 
 	 *   observed measurements. 
 	 * @param sensor_range Range [m] of sensor

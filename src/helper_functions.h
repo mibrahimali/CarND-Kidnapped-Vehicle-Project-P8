@@ -13,7 +13,11 @@
 #include <math.h>
 #include <vector>
 #include "map.h"
+#include <iostream>
 
+using namespace std;
+
+# define M_PI 3.14159265358979323846  /* pi */
 /*
  * Struct representing one position/control measurement.
  */
@@ -51,6 +55,20 @@ struct LandmarkObs {
  */
 inline double dist(double x1, double y1, double x2, double y2) {
 	return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+}
+
+
+inline double multi_var_gaussian_calculater(double x, double y, double mu_x, double mu_y, double sig_x, double sig_y)
+{
+	// calculate normalization term
+	double gauss_norm= (1.0/(2.0 * M_PI * sig_x * sig_y));
+
+	// calculate exponent
+	double exponent= (((x - mu_x)*(x - mu_x))/(2.0 * sig_x*sig_x)) + (((y - mu_y)*(y - mu_y))/(2.0 * sig_y*sig_y));
+	cout <<"exponent ="<<exponent<<endl;
+	// calculate weight using normalization terms and exponent
+	double weight= gauss_norm * exp(-exponent);
+	return weight;
 }
 
 inline double * getError(double gt_x, double gt_y, double gt_theta, double pf_x, double pf_y, double pf_theta) {

@@ -26,7 +26,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
 	default_random_engine gen;
 	double std_x, std_y, std_psi; // Standard deviations for x, y, and psi
-	this->num_particles = 1;
+	this->num_particles = 500;
 	//Set standard deviations for x, y, and psi
 	 std_x = std[0];
 	 std_y = std[1];
@@ -45,9 +45,11 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 		particle_i.weight = 1;
 		this->particles.push_back(particle_i);
 		this->weights.push_back(1);
+		// for debuging purpose
+		// cout<<"my particle "<< i<< "initialized at x= "<<particle_i.x<<" y = " << particle_i.y <<" theta = "<< particle_i.theta <<endl;
 	}
 	this->is_initialized = true;
-
+	
 }
 
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
@@ -75,8 +77,8 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 		}
 		else
 		{
-			new_x = this->particles[i].x + (velocity/delta_t) *(sin(this->particles[i].theta + yaw_rate*delta_t) - sin(this->particles[i].theta));
-			new_y = this->particles[i].y + (velocity/delta_t) *(cos(this->particles[i].theta) - cos(this->particles[i].theta + yaw_rate*delta_t));
+			new_x = this->particles[i].x + (velocity/yaw_rate) *(sin(this->particles[i].theta + yaw_rate*delta_t) - sin(this->particles[i].theta));
+			new_y = this->particles[i].y + (velocity/yaw_rate) *(cos(this->particles[i].theta) - cos(this->particles[i].theta + yaw_rate*delta_t));
 			new_theta = this->particles[i].theta + yaw_rate*delta_t;
 		}
 		// This line creates a normal (Gaussian) distribution for prediction step noise 
@@ -86,6 +88,9 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 		this->particles[i].x = dist_x(gen);
 		this->particles[i].y = dist_y(gen);
 		this->particles[i].theta  = dist_psi(gen);
+		// for debuging purpose
+		// cout<<"my predected particle "<< i<< " at x= "<<this->particles[i].x<<" y = " << this->particles[i].y <<" theta = "<< this->particles[i].theta <<endl;
+		// cout << "using velocity = "<< velocity<<"and yaw rate = "<<yaw_rate<<endl;
 	}
 }
 
@@ -169,7 +174,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	double std_landmark_x = std_landmark[0];
 	double std_landmark_y = std_landmark[1];
 	for (int i = 0; i < this->num_particles; i++) {
-		cout<<"before :: particle id"<< i << "has weight = "<<this->particles[i].weight<<endl;
 		std::vector<LandmarkObs> predicted_observations = this->predictObservation(this->particles[i], sensor_range, map_landmarks);
 		std::vector<LandmarkObs> transformed_observations = this->transformObservation(this->particles[i],observations);
 		this->dataAssociation(predicted_observations,transformed_observations);
@@ -182,7 +186,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 			double single_measure_prob = multi_var_gaussian_calculater(transformed_observations[j].x, transformed_observations[j].y,
 									 map_landmarks.landmark_list[assoicated_map_landmark].x_f, map_landmarks.landmark_list[assoicated_map_landmark].y_f,
 									  std_landmark_x, std_landmark_y);
-			cout << "before :: particle id"<< i << "measure " <<j<< "= "<<single_measure_prob<<endl;
 			weight *=	single_measure_prob;
 
 			associations.push_back(transformed_observations[j].id);
@@ -193,7 +196,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		this->particles[i] = SetAssociations(this->particles[i],associations,sense_x,sense_y);
 		this->particles[i].weight = weight;
 		this->weights[i] = weight;
-		cout<<"particle id"<< i << "has weight = "<<this->particles[i].weight<<endl;
+		// cout<<"particle id"<< i << "has weight = "<<this->particles[i].weight<<endl;
 	}
 }
 
@@ -201,22 +204,22 @@ void ParticleFilter::resample() {
 	// TODO: Resample particles with replacement with probability proportional to their weight. 
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
-	// std::vector<Particle> resampled_particles;
-	// std::vector<double> resampled_weights;
-	// std::default_random_engine generator;
-  // std::discrete_distribution<int> distribution(this->weights.begin(), this->weights.end());
-	// for (int i = 0; i < this->num_particles; i++) {
-	// 	int particle_id = distribution(generator);
+	std::vector<Particle> resampled_particles;
+	std::vector<double> resampled_weights;
+	std::default_random_engine generator;
+  std::discrete_distribution<int> distribution(this->weights.begin(), this->weights.end());
+	for (int i = 0; i < this->num_particles; i++) {
+		int particle_id = distribution(generator);
 
-	// 	Particle particle_i;
-	// 	particle_i= this->particles[particle_id];
-	// 	resampled_particles.push_back(particle_i);
-	// 	resampled_weights.push_back(this->particles[particle_id].weight);
-	// }
-	// this->particles.clear();
-	// this->weights.clear();
-	// this->particles = resampled_particles;
-	// this->weights = resampled_weights;
+		Particle particle_i;
+		particle_i= this->particles[particle_id];
+		resampled_particles.push_back(particle_i);
+		resampled_weights.push_back(this->particles[particle_id].weight);
+	}
+	this->particles.clear();
+	this->weights.clear();
+	this->particles = resampled_particles;
+	this->weights = resampled_weights;
 
 }
 

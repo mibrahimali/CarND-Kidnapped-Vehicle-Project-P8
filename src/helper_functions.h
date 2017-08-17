@@ -65,7 +65,6 @@ inline double multi_var_gaussian_calculater(double x, double y, double mu_x, dou
 
 	// calculate exponent
 	double exponent= (((x - mu_x)*(x - mu_x))/(2.0 * sig_x*sig_x)) + (((y - mu_y)*(y - mu_y))/(2.0 * sig_y*sig_y));
-	cout <<"exponent ="<<exponent<<endl;
 	// calculate weight using normalization terms and exponent
 	double weight= gauss_norm * exp(-exponent);
 	return weight;
